@@ -89,12 +89,13 @@ class Hero:
 def main():
     tmr = 0
     spd = 1.0
+    hp = 100
     clock = pg.time.Clock()
     pg.display.set_caption("roguelike")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
     hero = Hero((WIDTH/2, HEIGHT/2))
 
-    while True:
+    while hp > 0:
         pass
 
     key_lst = pg.key.get_pressed()
