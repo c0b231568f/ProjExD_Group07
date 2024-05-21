@@ -99,7 +99,7 @@ def main():
 
     key_lst = pg.key.get_pressed()
     hero.update(key_lst, spd, screen)
-    total_moved = hero.mvd(key_lst)
+    total_moved = hero.mvd(key_lst, spd)
     pg.display.update()
     clock.tick(50)
 
