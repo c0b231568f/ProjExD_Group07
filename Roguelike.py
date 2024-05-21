@@ -29,29 +29,29 @@ class Hero:
     """
     spd = 1.0
     delta = {
-        pg.K_UP: (0, -5*spd),
-        pg.K_RIGHT: (5*spd, 0),
-        pg.K_DOWN: (0, 5*spd),
-        pg.K_LEFT: (-5*spd, 0),
+        pg.K_UP: (0, -1*spd),
+        pg.K_RIGHT: (1*spd, 0),
+        pg.K_DOWN: (0, 1*spd),
+        pg.K_LEFT: (-1*spd, 0),
     }
     img0 = pg.transform.rotozoom(pg.image.load("fig/hero0.png"), 0, 0.1)
     img = pg.transform.flip(img0, True, False)
     imgs = {
-        (+5*spd, 0): img0,  # 右
-        (+5*spd, -5*spd): img0,  # 右上
-        (0, -5*spd): img0,  # 上
-        (-5*spd, -5*spd): img,  # 左上
-        (-5*spd, 0): img,  # 左
-        (-5*spd, +5*spd): img,   # 左下
-        (0, +5*spd): img,  # 下
-        (+5*spd, +5*spd): img0,  # 右下
+        (+1*spd, 0): img0,  # 右
+        (+1*spd, -1*spd): img0,  # 右上
+        (0, -1*spd): img0,  # 上
+        (-1*spd, -1*spd): img,  # 左上
+        (-1*spd, 0): img,  # 左
+        (-1*spd, +1*spd): img,   # 左下
+        (0, +1*spd): img,  # 下
+        (+1*spd, +1*spd): img0,  # 右下
     }
 
     def __init__(self, xy: tuple[int, int]):
         """
         Surfaceつくる
         """
-        self.img0 = __class__.imgs[(+5, 0)]
+        self.img0 = __class__.imgs[(+1, 0)]
         self.rct: pg.Rect = self.img.get_rect()
         self.rct.center = xy
 
