@@ -36,8 +36,8 @@ class Enemy(pg.sprite.Sprite):
         super().__init__()
         self.img = pg.transform.rotozoom(pg.image.load("fig/character_monster_skeleton_02.png"), 0, 0.1)
         self.rct = self.img.get_rect()
-        self.rct.center = random.randint(0, WIDTH), random.randint(0, HEIGHT)
-        self.vx, self.vy = +5, +5
+        self.rct.center = random.randint(0, WIDTH), random.randint(0, HEIGHT)  # 敵が出現するときの座標をランダムにする
+        self.vx, self.vy = +5, +5  # 敵の横方向、縦方向の速度
 
     def update(self, screen: pg.Surface):
         """
@@ -58,7 +58,7 @@ def main():
     clock = pg.time.Clock()
     pg.display.set_caption("roguelike")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
-    bg_img = pg.transform.rotozoom(pg.image.load(f"fig/maptile_sogen_02.png"), 0, 2.5)
+    bg_img = pg.transform.rotozoom(pg.image.load(f"fig/maptile_sogen_02.png"), 0, 2.5)  # 敵の画像を2.5倍してロードする
     emys = pg.sprite.Group()
 
     while True:
