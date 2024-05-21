@@ -71,6 +71,18 @@ class Hero:
         screen.blit(self.img, self.rct)
 
 
+    def mvd(self, key_lst: [bool]) -> tuple[int, int]:
+        """
+        総移動距離
+        """
+        ttl_mv = [0, 0]
+        for k, mv in __class__.delta.items():
+            if key_lst[k]:
+                ttl_mv[0] += mv[0]
+                ttl_mv[1] += mv[1]
+        return ttl_mv
+
+
 def main():
     tmr = 0
     clock = pg.time.Clock()
@@ -83,6 +95,7 @@ def main():
 
     key_lst = pg.key.get_pressed()
     hero.update(key_lst, screen)
+    total_moved = hero.mvd(key_lst)
     pg.display.update()
     clock.tick(50)
 
