@@ -76,10 +76,13 @@ def main():
     clock = pg.time.Clock()
     pg.display.set_caption("roguelike")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
+    hero = Hero((WIDTH/2, HEIGHT/2))
 
     while True:
         pass
 
+    key_lst = pg.key.get_pressed()
+    hero.update(key_lst, screen)
     pg.display.update()
     clock.tick(50)
 
