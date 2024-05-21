@@ -7,12 +7,15 @@ import pygame as pg
 from pygame.sprite import Group
 
 WIDTH, HEIGHT = 1200, 900
-NUM_OF_ENEMYS = 10
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 def check_bound(obj_rct: pg.Rect) -> tuple[bool, bool]:
-    
+    """
+    オブジェクトが画面内or画面外を判定し，真理値タプルを返す関数
+    引数：敵Rect
+    戻り値：横方向，縦方向のはみ出し判定結果（画面内：True／画面外：False）
+    """
     yoko, tate = True, True
     if obj_rct.right < 0 or WIDTH < obj_rct.left:
         yoko = False
@@ -26,6 +29,9 @@ def calc_orientation(org: pg.Rect, dst: pg.Rect) -> tuple[float, float]:
     return x_diff / norm, y_diff / norm
 
 class Enemy(pg.sprite.Sprite):
+    """
+    敵に関するクラス
+    """
     def __init__(self):
         super().__init__()
         self.img = pg.transform.rotozoom(pg.image.load("fig/character_monster_skeleton_02.png"), 0, 0.1)
@@ -34,7 +40,10 @@ class Enemy(pg.sprite.Sprite):
         self.vx, self.vy = +5, +5
 
     def update(self, screen: pg.Surface):
-        
+        """
+        敵を速度ベクトルself.vx, self.vyに基づき移動させる
+        引数 screen：画面Surface
+        """
         yoko, tate = check_bound(self.rct)
         if not yoko:
             self.vx *= -1
@@ -51,7 +60,6 @@ def main():
     screen = pg.display.set_mode((WIDTH, HEIGHT))
     bg_img = pg.transform.rotozoom(pg.image.load(f"fig/maptile_sogen_02.png"), 0, 2.5)
     emys = pg.sprite.Group()
-    #enemys = [Enemy((255, 0, 0), 10) for i in range(NUM_OF_ENEMYS)]
 
     while True:
         key_lst = pg.key.get_pressed()
@@ -60,7 +68,7 @@ def main():
                 return 
         screen.blit(bg_img, [0, 0])
 
-        if tmr % 200 ==0:
+        if tmr % 200 ==0:  # 200フレームに1回，敵を出現させる
             emys.add(Enemy())
         emys.update(screen)
         pg.display.update()
