@@ -34,7 +34,7 @@ class Hero:
         pg.K_DOWN: (0, 5*spd),
         pg.K_LEFT: (-5*spd, 0),
     }
-    img0 = pg.transform.rotozoom(pg.image.load("fig/hero0.png"), 0, 1.0)
+    img0 = pg.transform.rotozoom(pg.image.load("fig/hero0.png"), 0, 0.1)
     img = pg.transform.flip(img0, True, False)
     imgs = {
         (+5*spd, 0): img0,  # 右
@@ -78,7 +78,7 @@ class Hero:
         総移動距離
         """
         ttl_mv = [0, 0]
-        seld.spd = spd
+        self.spd = spd
         for k, mv in __class__.delta.items():
             if key_lst[k]:
                 ttl_mv[0] += mv[0]
@@ -95,14 +95,13 @@ def main():
     screen = pg.display.set_mode((WIDTH, HEIGHT))
     hero = Hero((WIDTH/2, HEIGHT/2))
 
-    while hp > 0:
-        pass
-
-    key_lst = pg.key.get_pressed()
-    hero.update(key_lst, spd, screen)
-    total_moved = hero.mvd(key_lst, spd)
-    pg.display.update()
-    clock.tick(50)
+    while True:
+        if hp > 0:
+            key_lst = pg.key.get_pressed()
+            hero.update(key_lst, spd, screen)
+        total_moved = hero.mvd(key_lst, spd)
+        pg.display.update()
+        clock.tick(50)
 
 
 if __name__ == "__main__":
