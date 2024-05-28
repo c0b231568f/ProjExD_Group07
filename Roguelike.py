@@ -55,12 +55,12 @@ class Enemy(pg.sprite.Sprite):
     imgs = [pg.transform.rotozoom(pg.image.load(f"fig/character_monster_{i}.png"), 0, 0.1) for i in range(0,2)]  # 敵の画像をロードする
     def __init__(self, hero:"Hero"):
         super().__init__()
-        self.img = random.choice(__class__.imgs)  # 敵をランダムに出る
-        self.sct = 10  # 敵のスポーンct
-        self.rct = self.img.get_rect()
-        self.rct.center = random.randint(0, WIDTH), random.randint(0, HEIGHT)  # 敵が出現するときの座標をランダムにする
+        self.image = random.choice(__class__.imgs)  # 敵をランダムに出る
+        self.sct = 100  # 敵のスポーンct
+        self.rect = self.image.get_rect()
+        self.rect.center = random.randint(0, WIDTH), random.randint(0, HEIGHT)  # 敵が出現するときの座標をランダムにする
         #敵が出現する時、攻撃対象のheroの方向を計算
-        self.vx, self.vy = calc_orientation(self.rct, hero.rct)  
+        self.vx, self.vy = calc_orientation(self.rect, hero.rct)  
         #self.vx, self.vy = random.randint(-7, 7), random.randint(-7, 7)  # 敵の横方向、縦方向のベクトル
         self.speed = 7  # 敵の速さの設定
 
@@ -69,22 +69,22 @@ class Enemy(pg.sprite.Sprite):
         敵を速度ベクトルself.vx, self.vyに基づき移動させる
         引数 screen：画面Surface
         """
-        self.vx, self.vy = calc_orientation(self.rct, hero.rct)
-        yoko, tate = check_bound(self.rct)
+        self.vx, self.vy = calc_orientation(self.rect, hero.rct)
+        yoko, tate = check_bound(self.rect)
         if not yoko:
             self.vx *= -1
         if not tate:
             self.vy *= -1
-        self.rct.move_ip(self.speed*self.vx, self.speed*self.vy)
-        screen.blit(self.img, self.rct)
+        self.rect.move_ip(self.speed*self.vx, self.speed*self.vy)
+        screen.blit(self.image, self.rect)
 
     def cool(self, screen:pg.Surface):
         self.speed = 3
         self.sct = 100
-        img = pg.Surface((WIDTH,HEIGHT))
-        pg.draw.rect(img, (0, 0, 255), (0, 0, WIDTH, HEIGHT))
-        img.set_alpha(60)
-        screen.blit(img,[0, 0])
+        image = pg.Surface((WIDTH,HEIGHT))
+        pg.draw.rect(image, (0, 0, 255), (0, 0, WIDTH, HEIGHT))
+        image.set_alpha(60)
+        screen.blit(image,[0, 0])
         pg.display.update()
         time.sleep(0.7)
 
@@ -120,7 +120,8 @@ class Hero:
         Surfaceつくる
         """
         self.spd = __class__.spd
-        self.img0 = self.imgs[(+1, 0)]
+        self.dire = (+1, 0)
+        self.img0 = self.imgs[self.dire]
         self.rct: pg.Rect = self.img.get_rect()
         self.rct.center = xy
 
@@ -139,7 +140,8 @@ class Hero:
         if check_bound(self.rct) != (True, True):
             self.rct.move_ip(-sum_mv[0], -sum_mv[1])
         if any(sum_mv): # sum_mv両方0の時のみFalse
-            self.img = __class__.imgs[tuple([_/abs(_) if _ != 0 else 0 for _ in sum_mv])] # __class__.imgsのkeyの値に整形
+            self.dire = tuple([_/abs(_) if _ != 0 else 0 for _ in sum_mv])
+            self.img = __class__.imgs[self.dire] # __class__.imgsのkeyの値に整形
         screen.blit(self.img, self.rct)
 
 
@@ -161,11 +163,22 @@ class Weapon(pg.sprite.Sprite):
     Heroクラスをベースに武器にまつわるクラス
     引数：Heroクラス
     """
-    def __init__(self, hero):
+    def __init__(self, hero, angle0: float = 0):
         super().__init__()
+        self.vx, self.vy = hero.dire
+        angle = math.degrees(math.atan2(-self.vy, self.vx)) + angle0
+        self.image = pg.transform.rotozoom(pg.image.load(f"fig/kogeki0.png"), angle, 0.1)
+        self.vx = math.cos(math.radians(angle))
+        self.vy = -math.sin(math.radians(angle))
+        self.rect = self.image.get_rect()
+        self.rect.centery = hero.rct.centery + hero.rct.height * self.vy
+        self.rect.centerx = hero.rct.centerx + hero.rct.width * self.vx 
+        self.speed = 10
 
-    def update():
-        pass
+    def update(self):
+        self.rect.move_ip(self.speed * self.vx, self.speed * self.vy)
+        if check_bound(self.rect) != (True, True):
+            self.kill()
 
 
 def main():
@@ -185,15 +198,24 @@ def main():
     bg_img = pg.image.load(f"fig/maptile_sogen_02.png")
     bg_img = pg.transform.scale(bg_img, (WIDTH/30, HEIGHT/30))
     hero = Hero((WIDTH/2, HEIGHT/2))
+    weapons = pg.sprite.Group()
 
     while True:
         key_lst = pg.key.get_pressed()
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 return 
+            if event.type == pg.KEYDOWN:
+                if event.key == pg.K_SPACE:
+                    weapons.add(Weapon(hero))
             if event.type == pg.KEYDOWN and event.key == pg.K_c: #and score.value >= 20:
                 emy.cool(screen)
                 #score.value -= 20
+            if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
+                weapons.add(Weapon(hero))
+        for em in pg.sprite.groupcollide(emys, weapons, True, True).keys():
+            em.kill()
+
         total_dist = hero.mvd(key_lst, spd)# hero.mvd() # hero.mvdメソッドは、他のメンバーが作る予定（戻り値x, yのタプル）
         for i in range(90):
             for j in range(90):
@@ -204,6 +226,8 @@ def main():
         total_moved = hero.mvd(key_lst, spd)
         hero.update(key_lst, spd, screen)
         emys.update(hero, screen)
+        weapons.update()
+        weapons.draw(screen)
         pg.display.update()
         tmr += 1
         clock.tick(50)
