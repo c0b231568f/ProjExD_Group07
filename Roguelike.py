@@ -6,10 +6,13 @@ import time
 import pygame as pg
 from pygame.sprite import Group
 
+
 WIDTH, HEIGHT = 1200, 900
 FIELDRANGE = 1200
 
+
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
 
 def calc_orientation(org: pg.Rect, dst: pg.Rect) -> tuple[float, float]:
     """
@@ -20,6 +23,7 @@ def calc_orientation(org: pg.Rect, dst: pg.Rect) -> tuple[float, float]:
     x_diff, y_diff = dst.centerx - org.centerx, dst.centery - org.centery
     norm = math.sqrt(x_diff ** 2 + y_diff ** 2)
     return x_diff / norm, y_diff / norm
+
 
 def over_field(obj_rct: pg.Rect) -> bool:
     """
@@ -34,6 +38,7 @@ def over_field(obj_rct: pg.Rect) -> bool:
         return True
     return False
 
+
 class Weapon(pg.sprite.Sprite):
     """
     Heroクラスをベースに武器にまつわるクラス
@@ -44,6 +49,7 @@ class Weapon(pg.sprite.Sprite):
 
     def update():
         pass
+
 
 def main():
     """
@@ -70,6 +76,7 @@ def main():
         pg.display.update()
         tmr += 1
         clock.tick(50)
+
 
 if __name__ == "__main__":
     pg.init()
