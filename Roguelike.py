@@ -26,7 +26,10 @@ def check_bound(obj_rct: pg.Rect) -> tuple[bool, bool]:
 def calc_orientation(org: pg.Rect, dst: pg.Rect) -> tuple[float, float]:
     x_diff, y_diff = dst.centerx - org.centerx, dst.centery - org.centery
     norm = math.sqrt(x_diff ** 2 + y_diff ** 2)
-    return x_diff / norm, y_diff / norm
+    if norm != 0:
+        return x_diff / norm, y_diff / norm
+    else:
+        return 0, 0
 
 
 class Enemy(pg.sprite.Sprite):
@@ -37,20 +40,20 @@ class Enemy(pg.sprite.Sprite):
     def __init__(self, hero:"Hero"):
         super().__init__()
         self.img = random.choice(__class__.imgs)  # 敵をランダムに出る
-        self.sct = 50  # 敵のスポーンct
+        self.sct = 10  # 敵のスポーンct
         self.rct = self.img.get_rect()
         self.rct.center = random.randint(0, WIDTH), random.randint(0, HEIGHT)  # 敵が出現するときの座標をランダムにする
         #敵が出現する時、攻撃対象のheroの方向を計算
-        self.vx, self.vy = calc_orientation(self.rct, hero.rct)
-        print(self.vx, self.vy)  
+        self.vx, self.vy = calc_orientation(self.rct, hero.rct)  
         #self.vx, self.vy = random.randint(-7, 7), random.randint(-7, 7)  # 敵の横方向、縦方向のベクトル
         self.speed = 7  # 敵の速さの設定
 
-    def update(self, screen: pg.Surface):
+    def update(self,hero:"Hero", screen: pg.Surface):
         """
         敵を速度ベクトルself.vx, self.vyに基づき移動させる
         引数 screen：画面Surface
         """
+        self.vx, self.vy = calc_orientation(self.rct, hero.rct)
         yoko, tate = check_bound(self.rct)
         if not yoko:
             self.vx *= -1
@@ -169,7 +172,7 @@ def main():
             emys.add(Enemy(hero))
         total_moved = hero.mvd(key_lst, spd)
         hero.update(key_lst, spd, screen)
-        emys.update(screen)
+        emys.update(hero, screen)
         pg.display.update()
         tmr += 1
         clock.tick(50)
