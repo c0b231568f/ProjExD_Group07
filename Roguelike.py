@@ -156,6 +156,21 @@ class Hero:
                 ttl_mv[0] += mv[0]
                 ttl_mv[1] += mv[1]
         return ttl_mv
+    
+
+class Score:
+
+    def __init__(self):
+        self.font = pg.font.Font(None, 50)
+        self.color = (0, 0, 255)
+        self.value = 0
+        self.image = self.font.render(f"Score: {self.value}", 0, self.color)
+        self.rect = self.image.get_rect()
+        self.rect.center = 100, HEIGHT-50
+
+    def update(self, screen: pg.Surface):
+        self.image = self.font.render(f"Score: {self.value}", 0, self.color)
+        screen.blit(self.image, self.rect)
 
 
 class Weapon(pg.sprite.Sprite):
@@ -192,6 +207,7 @@ def main():
     pg.display.set_caption("roguelike")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
     bg_img = pg.transform.rotozoom(pg.image.load(f"fig/maptile_sogen_02.png"), 0, 2.5)  # 背景の画像を2.5倍してロードする
+    score = Score()
     emys = pg.sprite.Group()
     hero = Hero((WIDTH/2, HEIGHT/2))
     emy = Enemy(hero)
@@ -208,13 +224,14 @@ def main():
             if event.type == pg.KEYDOWN:
                 if event.key == pg.K_SPACE:
                     weapons.add(Weapon(hero))
-            if event.type == pg.KEYDOWN and event.key == pg.K_c: #and score.value >= 20:
+            if event.type == pg.KEYDOWN and event.key == pg.K_c and score.value >= 2000:
                 emy.cool(screen)
-                #score.value -= 20
+                score.value -= 2000
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
                 weapons.add(Weapon(hero))
         for em in pg.sprite.groupcollide(emys, weapons, True, True).keys():
             em.kill()
+            score.value+=100
 
         total_dist = hero.mvd(key_lst, spd)# hero.mvd() # hero.mvdメソッドは、他のメンバーが作る予定（戻り値x, yのタプル）
         for i in range(90):
@@ -228,6 +245,7 @@ def main():
         emys.update(hero, screen)
         weapons.update()
         weapons.draw(screen)
+        score.update(screen)
         pg.display.update()
         tmr += 1
         clock.tick(50)
