@@ -7,9 +7,9 @@ import pygame as pg
 from pygame.sprite import Group
 
 
+
 WIDTH, HEIGHT = 1200, 900
 FIELDRANGE = 1200
-
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
@@ -168,6 +168,8 @@ class Weapon(pg.sprite.Sprite):
         pass
 
 
+
+
 def main():
     """
     main関数
@@ -178,11 +180,22 @@ def main():
     clock = pg.time.Clock()
     pg.display.set_caption("roguelike")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
-    bg_img = pg.transform.rotozoom(pg.image.load(f"fig/maptile_sogen_02.png"), 0, 2.5)  # 背景の画像を2.5倍してロードする
     emys = pg.sprite.Group()
     hero = Hero((WIDTH/2, HEIGHT/2))
     emy = Enemy(hero)
-    bg_img = pg.image.load(f"fig/maptile_sogen_02.png")
+    bg_img = pg.image.load(f"./fig/maptile_sogen_02.png")
+    bg_img = pg.transform.scale(bg_img, (WIDTH/30, HEIGHT/30))
+    hero = Hero((WIDTH/2, HEIGHT/2))
+    
+    # Initialize the mixer and load the background music and sound effects
+    pg.mixer.init()
+    pg.mixer.music.load(f"fig/maou_bgm_fantasy08.mp3")  # Ensure you have the correct path to your music file
+    pg.mixer.music.play(-1)  # Play the music on a loop
+    
+    # Load enemy appear sound effect
+    enemy_appear_sound = pg.mixer.Sound("fig/enemy_appear_sound.mp3")  # Ensure you have the correct path to your sound effect file
+
+    enemy_spawned = False  # Track if the enemy has been spawned
     bg_img = pg.transform.scale(bg_img, (WIDTH/30, HEIGHT/30))
     hero = Hero((WIDTH/2, HEIGHT/2))
 
