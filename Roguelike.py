@@ -37,6 +37,7 @@ def over_field(obj_rct: pg.Rect) -> bool:
         return True
     return False
 
+
 class Weapon(pg.sprite.Sprite):
     """
     Heroクラスをベースに武器にまつわるクラス
@@ -48,6 +49,7 @@ class Weapon(pg.sprite.Sprite):
     def update():
         pass
 
+
 class Field(pg.sprite.Sprite):
     """
     アイテムや背景オブジェクトを表示
@@ -58,12 +60,16 @@ class Field(pg.sprite.Sprite):
         self.images = pg.image.load(random.choice(__class__.images))
         self.rect = self.images.get_rect()
         self.rect.center = (random.randint(-WIDTH, WIDTH*2), random.randint(-HEIGHT, HEIGHT*2))
+        # 各アイテムのタグ付け
         self.tag = "recover" if self.images == "filename1" else "background"
+        # 主人公の動きに応じた背景移動のための初期値
         self.mvd = hero.mvd()
 
     def update(self, screen, hero):
+        # 指定範囲のフィールドからアイテムやオブジェクトが消えたら削除
         if over_field(self.pos):
             self.kill()
+        # 背景の移動
         self.mvd = hero.mvd()-self.mvd
         self.rect.move_ip(self.mvd[0], self.mvd[1])
         screen.blit(self.images, self.rect)
@@ -85,6 +91,7 @@ class Score:
     def update(self, screen: pg.Surface):
         self.image = self.font.render(f"Score: {self.value}\nDefeated Enemys: {self.def_nums}", 0, self.color)
         screen.blit(self.image, self.rect)
+
 
 def main():
     """
