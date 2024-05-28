@@ -194,7 +194,10 @@ def main():
             if event.type == pg.KEYDOWN and event.key == pg.K_c: #and score.value >= 20:
                 emy.cool(screen)
                 #score.value -= 20
-        screen.blit(bg_img, [0, 0])
+        total_dist = hero.mvd(key_lst, spd)# hero.mvd() # hero.mvdメソッドは、他のメンバーが作る予定（戻り値x, yのタプル）
+        for i in range(90):
+            for j in range(90):
+                screen.blit(bg_img, [-WIDTH + i*WIDTH/30 + (total_dist[0]%(WIDTH/30)), -HEIGHT + j*HEIGHT/30+ (total_dist[1]%(HEIGHT/30))])
 
         if tmr % emy.sct == 0:  # 200フレームに1回，敵を出現させる
             emys.add(Enemy(hero))
