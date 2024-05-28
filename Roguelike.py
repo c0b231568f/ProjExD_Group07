@@ -72,6 +72,7 @@ class Enemy(pg.sprite.Sprite):
         pg.display.update()
         time.sleep(0.7)
 
+
 class Hero:
     """
     主人公に関するクラス
@@ -138,27 +139,7 @@ class Hero:
                 ttl_mv[1] += mv[1]
         return ttl_mv
 
-"""
-class Cool(pg.sprite.Sprite):
-    #敵を減速し、スポーンctを長くなる
 
-    def __init__(self, screen):
-        img = pg.Surface((WIDTH,HEIGHT))
-        pg.draw.rect(img, (0, 0, 255), (0, 0, WIDTH, HEIGHT))
-        img.set_alpha(60)
-        screen.blit(img,[0, 0])
-        pg.display.update()
-        time.sleep(0.3)
-    def update(self, emys: "Enemy", screen):
-        for emy in emys:
-            emy.speed = 0.5
-        img = pg.Surface((WIDTH,HEIGHT))
-        pg.draw.rect(img, (0, 0, 255), (0, 0, WIDTH, HEIGHT))
-        img.set_alpha(60)
-        screen.blit(img,[0, 0])
-        pg.display.update()
-        emys.sct = 1000
-"""
 def main():
     tmr = 0
     spd = 10.0
@@ -186,7 +167,6 @@ def main():
         total_moved = hero.mvd(key_lst, spd)
         hero.update(key_lst, spd, screen)
         emys.update(hero, screen)
-        #Cool.update(emys, screen)
         pg.display.update()
         tmr += 1
         clock.tick(50)
