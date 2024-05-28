@@ -62,6 +62,15 @@ class Enemy(pg.sprite.Sprite):
         self.rct.move_ip(self.speed*self.vx, self.speed*self.vy)
         screen.blit(self.img, self.rct)
 
+    def cool(self, screen:pg.Surface):
+        self.speed = 3
+        self.sct = 100
+        img = pg.Surface((WIDTH,HEIGHT))
+        pg.draw.rect(img, (0, 0, 255), (0, 0, WIDTH, HEIGHT))
+        img.set_alpha(60)
+        screen.blit(img,[0, 0])
+        pg.display.update()
+        time.sleep(0.7)
 
 class Hero:
     """
@@ -129,23 +138,27 @@ class Hero:
                 ttl_mv[1] += mv[1]
         return ttl_mv
 
+"""
+class Cool(pg.sprite.Sprite):
+    #敵を減速し、スポーンctを長くなる
 
-class Cool:
-    """
-    敵を減速し、スポーンctを長くなる
-    """
-    def __init__(self, emys: "Enemy", screen):
-        for emy in emys:
-            emy.speed = 0.5
-        emys.sct = 1000
+    def __init__(self, screen):
         img = pg.Surface((WIDTH,HEIGHT))
         pg.draw.rect(img, (0, 0, 255), (0, 0, WIDTH, HEIGHT))
         img.set_alpha(60)
         screen.blit(img,[0, 0])
         pg.display.update()
         time.sleep(0.3)
-
-
+    def update(self, emys: "Enemy", screen):
+        for emy in emys:
+            emy.speed = 0.5
+        img = pg.Surface((WIDTH,HEIGHT))
+        pg.draw.rect(img, (0, 0, 255), (0, 0, WIDTH, HEIGHT))
+        img.set_alpha(60)
+        screen.blit(img,[0, 0])
+        pg.display.update()
+        emys.sct = 1000
+"""
 def main():
     tmr = 0
     spd = 10.0
@@ -164,7 +177,7 @@ def main():
             if event.type == pg.QUIT:
                 return 
             if event.type == pg.KEYDOWN and event.key == pg.K_c: #and score.value >= 20:
-                Cool(emys, screen)
+                emy.cool(screen)
                 #score.value -= 20
         screen.blit(bg_img, [0, 0])
 
@@ -173,6 +186,7 @@ def main():
         total_moved = hero.mvd(key_lst, spd)
         hero.update(key_lst, spd, screen)
         emys.update(hero, screen)
+        #Cool.update(emys, screen)
         pg.display.update()
         tmr += 1
         clock.tick(50)
