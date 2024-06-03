@@ -76,6 +76,7 @@ class Enemy(pg.sprite.Sprite):
         if not tate:
             self.vy *= -1
         self.rect.move_ip(self.speed*self.vx, self.speed*self.vy)
+        self.rect.move_ip(-hero.sum_mv[0], -hero.sum_mv[1])
         screen.blit(self.image, self.rect)
 
     def cool(self, screen:pg.Surface):
@@ -124,23 +125,28 @@ class Hero:
         self.img0 = self.imgs[self.dire]
         self.rct: pg.Rect = self.img.get_rect()
         self.rct.center = xy
+        self.total_dist = [0, 0]
+        self.sum_mv = [0, 0]
 
 
     def update(self, key_lst: list[bool], spd: float, screen: pg.Surface):
         """
         移動させる
         """
-        sum_mv = [0, 0]
+        self.sum_mv = [0, 0]
         self.spd = spd
         for k, mv in __class__.delta.items():
             if key_lst[k]:
-                sum_mv[0] += mv[0]*spd
-                sum_mv[1] += mv[1]*spd
-        self.rct.move_ip(sum_mv)
+                self.sum_mv[0] += mv[0]*spd
+                self.sum_mv[1] += mv[1]*spd
+        # self.rct.move_ip(self.sum_mv)
+        self.total_dist[0]+= self.sum_mv[0]
+        self.total_dist[1]+= self.sum_mv[1]
+
         if check_bound(self.rct) != (True, True):
-            self.rct.move_ip(-sum_mv[0], -sum_mv[1])
-        if any(sum_mv): # sum_mv両方0の時のみFalse
-            self.dire = tuple([_/abs(_) if _ != 0 else 0 for _ in sum_mv])
+            self.rct.move_ip(-self.sum_mv[0], -self.sum_mv[1])
+        if any(self.sum_mv): # self.sum_mv両方0の時のみFalse
+            self.dire = tuple([_/abs(_) if _ != 0 else 0 for _ in self.sum_mv])
             self.img = __class__.imgs[self.dire] # __class__.imgsのkeyの値に整形
         screen.blit(self.img, self.rct)
 
@@ -265,10 +271,10 @@ def main():
                 if wep.delete:
                     wep.kill()
             score.value+=100
-        total_dist = hero.mvd(key_lst, spd)# hero.mvd() # hero.mvdメソッドは、他のメンバーが作る予定（戻り値x, yのタプル）
+        total_dist = hero.total_dist# hero.mvd() # hero.mvdメソッドは、他のメンバーが作る予定（戻り値x, yのタプル）
         for i in range(90):
             for j in range(90):
-                screen.blit(bg_img, [-WIDTH + i*WIDTH/30 + (total_dist[0]%(WIDTH/30)), -HEIGHT + j*HEIGHT/30+ (total_dist[1]%(HEIGHT/30))])
+                screen.blit(bg_img, [-WIDTH + i*WIDTH/30 - (total_dist[0]%(WIDTH/30)), -HEIGHT + j*HEIGHT/30- (total_dist[1]%(HEIGHT/30))])
 
         if tmr % emy.sct == 0:  # 200フレームに1回，敵を出現させる
             emys.add(Enemy(hero))
