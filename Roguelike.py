@@ -55,6 +55,115 @@ class Enemy(pg.sprite.Sprite):
     imgs = [pg.transform.rotozoom(pg.image.load(f"fig/character_monster_{i}.png"), 0, 0.1) for i in range(0,2)]  # 敵の画像をロードする
     def __init__(self, hero:"Hero"):
         super().__init__()
+        self.img = random.choice(__class__.imgs)  # 敵をランダムに出る
+        self.sct = 10  # 敵のスポーンct
+        self.rct = self.img.get_rect()
+        self.rct.center = random.randint(0, WIDTH), random.randint(0, HEIGHT)  # 敵が出現するときの座標をランダムにする
+        #敵が出現する時、攻撃対象のheroの方向を計算
+        self.vx, self.vy = calc_orientation(self.rct, hero.rct)  
+        #self.vx, self.vy = random.randint(-7, 7), random.randint(-7, 7)  # 敵の横方向、縦方向のベクトル
+        self.speed = 7  # 敵の速さの設定
+
+    def update(self,hero:"Hero", screen: pg.Surface):
+        """
+        敵を速度ベクトルself.vx, self.vyに基づき移動させる
+        引数 screen：画面Surface
+        """
+        self.vx, self.vy = calc_orientation(self.rct, hero.rct)
+        yoko, tate = check_bound(self.rct)
+        if not yoko:
+            self.vx *= -1
+        if not tate:
+            self.vy *= -1
+        self.rct.move_ip(self.speed*self.vx, self.speed*self.vy)
+        screen.blit(self.img, self.rct)
+
+    def cool(self, screen:pg.Surface):
+        self.speed = 3
+        self.sct = 100
+        img = pg.Surface((WIDTH,HEIGHT))
+        pg.draw.rect(img, (0, 0, 255), (0, 0, WIDTH, HEIGHT))
+        img.set_alpha(60)
+        screen.blit(img,[0, 0])
+        pg.display.update()
+        time.sleep(0.7)
+
+
+class Hero:
+    """
+    主人公に関するクラス
+    """
+    spd = 1.0
+    delta = {
+        pg.K_UP: (0, -1),
+        pg.K_RIGHT: (1, 0),
+        pg.K_DOWN: (0, 1),
+        pg.K_LEFT: (-1, 0),
+    }
+    
+    img0 = pg.transform.rotozoom(pg.image.load("fig/hero0.png"), 0, 0.1)
+    img = pg.transform.flip(img0, True, False)
+
+    imgs = {
+        (+1, 0): img0,  # 右
+        (+1, -1): img0,  # 右上
+        (0, -1): img0,  # 上
+        (-1, -1): img,  # 左上
+        (-1, 0): img,  # 左
+        (-1, +1): img,   # 左下
+        (0, +1): img,  # 下
+        (+1, +1): img0,  # 右下
+    }
+
+    def __init__(self, xy: tuple[int, int]):
+        """
+        Surfaceつくる
+        """
+        self.spd = __class__.spd
+        self.img0 = self.imgs[(+1, 0)]
+        self.rct: pg.Rect = self.img.get_rect()
+        self.rct.center = xy
+
+
+    def update(self, key_lst: list[bool], spd: float, screen: pg.Surface):
+        """
+        移動させる
+        """
+        sum_mv = [0, 0]
+        self.spd = spd
+        for k, mv in __class__.delta.items():
+            if key_lst[k]:
+                sum_mv[0] += mv[0]*spd
+                sum_mv[1] += mv[1]*spd
+        self.rct.move_ip(sum_mv)
+        if check_bound(self.rct) != (True, True):
+            self.rct.move_ip(-sum_mv[0], -sum_mv[1])
+        if any(sum_mv): # sum_mv両方0の時のみFalse
+            self.img = __class__.imgs[tuple([_/abs(_) if _ != 0 else 0 for _ in sum_mv])] # __class__.imgsのkeyの値に整形
+        screen.blit(self.img, self.rct)
+
+
+    def mvd(self, key_lst: list[bool], spd: float) -> tuple[int, int]:
+        """
+        総移動距離
+        """
+        ttl_mv = [0, 0]
+        self.spd = spd
+        for k, mv in __class__.delta.items():
+            if key_lst[k]:
+                ttl_mv[0] += mv[0]
+                ttl_mv[1] += mv[1]
+        return ttl_mv
+
+
+
+class Enemy(pg.sprite.Sprite):
+    """
+    敵に関するクラス
+    """
+    imgs = [pg.transform.rotozoom(pg.image.load(f"fig/character_monster_{i}.png"), 0, 0.1) for i in range(0,2)]  # 敵の画像をロードする
+    def __init__(self, hero:"Hero"):
+        super().__init__()
         self.image = random.choice(__class__.imgs)  # 敵をランダムに出る
         self.sct = 10  # 敵のスポーンct
         self.rect = self.image.get_rect()
