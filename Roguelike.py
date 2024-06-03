@@ -9,7 +9,7 @@ from pygame.sprite import Group
 
 
 WIDTH, HEIGHT = 1200, 900
-FIELDRANGE = 1200
+FIELDRANGE = WIDTH
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
@@ -62,26 +62,27 @@ class Enemy(pg.sprite.Sprite):
         #敵が出現する時、攻撃対象のheroの方向を計算
         self.vx, self.vy = calc_orientation(self.rect, hero.rct)  
         #self.vx, self.vy = random.randint(-7, 7), random.randint(-7, 7)  # 敵の横方向、縦方向のベクトル
-        self.speed = 7  # 敵の速さの設定
+        self.default_speed = 5  # 敵の速さの設定
+        self.speed = self.default_speed
+        self.cool_life = -10
 
-    def update(self,hero:"Hero", screen: pg.Surface):
+    def update(self,level, hero:"Hero", screen: pg.Surface):
         """
         敵を速度ベクトルself.vx, self.vyに基づき移動させる
         引数 screen：画面Surface
         """
+        self.speed = self.default_speed+(level-1)
         self.vx, self.vy = calc_orientation(self.rect, hero.rct)
         yoko, tate = check_bound(self.rect)
         if not yoko:
             self.vx *= -1
         if not tate:
             self.vy *= -1
-        self.rect.move_ip(self.speed*self.vx, self.speed*self.vy)
-        self.rect.move_ip(-hero.sum_mv[0], -hero.sum_mv[1])
+        self.rect.move_ip(self.speed*self.vx-hero.sum_mv[0], self.speed*self.vy-hero.sum_mv[1])
         screen.blit(self.image, self.rect)
 
-    def cool(self, screen:pg.Surface):
+    def cool(self, cool_life, screen:pg.Surface):
         self.speed = 3
-        self.sct = 100
         image = pg.Surface((WIDTH,HEIGHT))
         pg.draw.rect(image, (0, 0, 255), (0, 0, WIDTH, HEIGHT))
         image.set_alpha(60)
@@ -188,17 +189,19 @@ class Weapon(pg.sprite.Sprite):
         super().__init__()
         self.vx, self.vy = hero.dire
         angle = math.degrees(math.atan2(-self.vy, self.vx)) + angle0
-        self.image = pg.transform.rotozoom(pg.image.load(f"fig/kogeki0.png"), angle, 0.1)
+        self.image = pg.transform.rotozoom(pg.image.load(f"fig/kogeki0.png"), angle, 0.15)
         self.vx = math.cos(math.radians(angle))
         self.vy = -math.sin(math.radians(angle))
         self.rect = self.image.get_rect()
         self.rect.centery = hero.rct.centery + hero.rct.height * self.vy
         self.rect.centerx = hero.rct.centerx + hero.rct.width * self.vx 
-        self.speed = 10
+        self.default_speed = 30
+        self.speed = self.default_speed
         self.delete = True
 
-    def update(self, hero: Hero):
-        self.rect.move_ip(self.speed * self.vx, self.speed * self.vy)
+    def update(self, level, hero: Hero):
+        self.speed = self.default_speed*(1+(level-1)/5)
+        self.rect.move_ip(self.speed * self.vx-hero.sum_mv[0], self.speed * self.vy-hero.sum_mv[1])
         if check_bound(self.rect) != (True, True):
             self.kill()
 
@@ -207,13 +210,15 @@ class Weapon2(pg.sprite.Sprite):
     def __init__(self):
         super().__init__()
         self.angle = 0  # 武器の回転の初期角度
-        self.speed = 5  # 武器が回転する速さ
+        self.default_speed = 5  # 武器が回転する速さ
+        self.speed = self.default_speed
         self.distance = 100  # 主人公から武器までの距離
         self.image = pg.transform.rotozoom(pg.image.load(f"fig/ken.png"), self.angle, 0.5)
         self.rect = self.image.get_rect()
         self.delete = False
 
-    def update(self, hero):
+    def update(self, level, hero):
+        self.speed = self.default_speed+level
         self.angle += self.speed  # 角度を増加させる(回転速度)
         self.image = pg.transform.rotozoom(pg.image.load(f"fig/ken.png"), self.angle, 0.5)
         self.rect.centerx = hero.rct[0] + math.cos(math.radians(self.angle)) * self.distance
@@ -227,6 +232,8 @@ def main():
     tmr = 0
     spd = 10.0
     hp = 100
+    sct = 10
+    debuff_speed = 3
     clock = pg.time.Clock()
     pg.display.set_caption("roguelike")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
@@ -251,6 +258,8 @@ def main():
     enemy_spawned = False  # Track if the enemy has been spawned
     bg_img = pg.transform.scale(bg_img, (WIDTH/30, HEIGHT/30))
     hero = Hero((WIDTH/2, HEIGHT/2))
+    cool_life = -10
+    level = 1
 
     while True:
         key_lst = pg.key.get_pressed()
@@ -261,10 +270,17 @@ def main():
                 if event.key == pg.K_SPACE:
                     weapons.add(Weapon(hero))
             if event.type == pg.KEYDOWN and event.key == pg.K_c and score.value >= 2000:
-                emy.cool(screen)
+                emy.cool(cool_life, screen)
+                cool_life = 50*10
                 score.value -= 2000
+                for em in emys:
+                    em.speed = 3
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
                 weapons.add(Weapon(hero))
+
+        if score.value//1000+1!=level:
+            level = score.value//1000+1
+            sct = 10-(level-1) if level<=10 else 1
         for em, weps in pg.sprite.groupcollide(emys, weapons, True, False).items():
             em.kill()
             for wep in weps:
@@ -276,12 +292,23 @@ def main():
             for j in range(90):
                 screen.blit(bg_img, [-WIDTH + i*WIDTH/30 - (total_dist[0]%(WIDTH/30)), -HEIGHT + j*HEIGHT/30- (total_dist[1]%(HEIGHT/30))])
 
-        if tmr % emy.sct == 0:  # 200フレームに1回，敵を出現させる
-            emys.add(Enemy(hero))
-        total_moved = hero.mvd(key_lst, spd)
-        hero.update(key_lst, spd, screen)
-        emys.update(hero, screen)
-        weapons.update(hero)
+        if cool_life >= 0:
+            sct = 100
+        else:
+            sct = 10
+        if tmr % sct == 0:  # 200フレームに1回，敵を出現させる
+            new_emy = Enemy(hero)
+            if cool_life>=0:
+                new_emy.speed = debuff_speed
+            else:
+                new_emy.speed = 5
+            emys.add(new_emy)
+            # if cool_life>=0:
+            #     emys.sct
+        cool_life-=1
+        hero.update(key_lst, spd+(level-1), screen)
+        emys.update(level, hero, screen)
+        weapons.update(level, hero)
         weapons.draw(screen)
         score.update(screen)
         pg.display.update()
