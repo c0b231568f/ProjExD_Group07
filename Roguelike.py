@@ -230,6 +230,23 @@ class Weapon2(pg.sprite.Sprite):
         self.image = pg.transform.rotozoom(pg.image.load(f"fig/ken.png"), self.angle, 0.5)
         self.rect.centerx = hero.rect[0] + math.cos(math.radians(self.angle)) * self.distance
         self.rect.centery = hero.rect[1] + math.sin(math.radians(self.angle)) * self.distance
+
+
+class Potion(pg.sprite.Sprite):
+    
+    def __init__(self):
+        super().__init__()
+        self.image = pg.transform.rotozoom(pg.image.load("fig/portion_01_red.png"), 0, 0.05)
+        self.rect = self.image.get_rect()
+        randx, randy = random.randint(0, WIDTH*2), random.randint(0, HEIGHT*2)
+        self.rect.centerx = -randx if randx//WIDTH==0 else WIDTH+randx%WIDTH
+        self.rect.centery = -randy if randy//HEIGHT==0 else HEIGHT+randy%HEIGHT
+        self.recover = 80
+    
+    def update(self, hero: Hero):
+        self.rect.move_ip(-hero.sum_mv[0], -hero.sum_mv[1])
+        if over_field(self.rect):
+            self.kill()
         
 
 def main():
@@ -254,6 +271,7 @@ def main():
     hero = Hero((WIDTH/2, HEIGHT/2))
     weapons = pg.sprite.Group()
     weapons.add(Weapon2())
+    potions = pg.sprite.Group()
     # Initialize the mixer and load the background music and sound effects
     pg.mixer.init()
     pg.mixer.music.load(f"fig/maou_bgm_fantasy08.mp3")  # Ensure you have the correct path to your music file
@@ -304,6 +322,13 @@ def main():
             else:
                 hero.health-=30
         total_dist = hero.total_dist
+
+        for potion in pg.sprite.spritecollide(hero, potions, True):
+            potion.kill()
+            hero.health+=60
+            if hero.health>=hero.max_health:
+                hero.health = hero.max_health
+
         for i in range(90):
             for j in range(90):
                 screen.blit(bg_img, [-WIDTH + i*WIDTH/30 - (total_dist[0]%(WIDTH/30)), -HEIGHT + j*HEIGHT/30- (total_dist[1]%(HEIGHT/30))])
@@ -319,11 +344,16 @@ def main():
             else:
                 new_emy.speed = 5
             emys.add(new_emy)
+        if tmr % 500 == 0 or len(potions) <= 40: # 500フレームに一回、フィールドのポーションが40個以下なら、ポーションを画面外のフィールドに生成
+            potions.add(Potion())
+        
         cool_life-=1
         hero.update(key_lst, spd+(level-1), screen)
         emys.update(level, hero, screen)
         weapons.update(level, hero)
         weapons.draw(screen)
+        potions.update(hero)
+        potions.draw(screen)
         score.update(screen)
         pg.display.update()
         if score.value>=20000: # 2万点を超えたらクリア
