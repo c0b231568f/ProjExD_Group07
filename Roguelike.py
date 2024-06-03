@@ -294,9 +294,15 @@ def main():
                 if wep.delete:
                     wep.kill()
             score.value+=100
+        # 敵に当たったらダメージを受ける
         for em in pg.sprite.spritecollide(hero, emys, True):
             em.kill()
-            hero.health-=10
+            if level <= 3:
+                hero.health-=10
+            elif level <= 6:
+                hero.health-=20
+            else:
+                hero.health-=30
         total_dist = hero.total_dist
         for i in range(90):
             for j in range(90):
