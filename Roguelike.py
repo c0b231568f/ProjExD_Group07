@@ -298,8 +298,9 @@ class Weapon(pg.sprite.Sprite):
         self.rect.centery = hero.rct.centery + hero.rct.height * self.vy
         self.rect.centerx = hero.rct.centerx + hero.rct.width * self.vx 
         self.speed = 10
+        self.delete = True
 
-    def update(self):
+    def update(self, hero: Hero):
         self.rect.move_ip(self.speed * self.vx, self.speed * self.vy)
         if check_bound(self.rect) != (True, True):
             self.kill()
@@ -313,6 +314,7 @@ class Weapon2(pg.sprite.Sprite):
         self.distance = 100  # 主人公から武器までの距離
         self.image = pg.transform.rotozoom(pg.image.load(f"fig/ken.png"), self.angle, 0.5)
         self.rect = self.image.get_rect()
+        self.delete = False
 
     def update(self, hero):
         self.angle += self.speed  # 角度を増加させる(回転速度)
@@ -340,8 +342,7 @@ def main():
     bg_img = pg.transform.scale(bg_img, (WIDTH/30, HEIGHT/30))
     hero = Hero((WIDTH/2, HEIGHT/2))
     weapons = pg.sprite.Group()
-    weapon2 = Weapon2()
-    weapons2 = pg.sprite.Group()
+    weapons.add(Weapon2())
     # Initialize the mixer and load the background music and sound effects
     pg.mixer.init()
     pg.mixer.music.load(f"fig/maou_bgm_fantasy08.mp3")  # Ensure you have the correct path to your music file
@@ -367,11 +368,11 @@ def main():
                 score.value -= 2000
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
                 weapons.add(Weapon(hero))
-        for em in pg.sprite.groupcollide(emys, weapons, True, True).keys():
+        for em, weps in pg.sprite.groupcollide(emys, weapons, True, False).items():
             em.kill()
-            score.value+=100
-        for em in pg.sprite.groupcollide(emys, weapons2, True, True).keys():
-            em.kill()
+            for wep in weps:
+                if wep.delete:
+                    wep.kill()
             score.value+=100
         total_dist = hero.mvd(key_lst, spd)# hero.mvd() # hero.mvdメソッドは、他のメンバーが作る予定（戻り値x, yのタプル）
         for i in range(90):
@@ -383,10 +384,8 @@ def main():
         total_moved = hero.mvd(key_lst, spd)
         hero.update(key_lst, spd, screen)
         emys.update(hero, screen)
-        weapons.update()
+        weapons.update(hero)
         weapons.draw(screen)
-        weapon2.update(hero)
-        screen.blit(weapon2.image, weapon2.rect)
         score.update(screen)
         pg.display.update()
         tmr += 1
