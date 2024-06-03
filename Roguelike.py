@@ -312,6 +312,17 @@ def main():
         weapons.draw(screen)
         score.update(screen)
         pg.display.update()
+        if score.value>=20000: # 2万点を超えたらクリア
+            image = pg.Surface((WIDTH,HEIGHT))
+            pg.draw.rect(image, (255, 255, 0), (0, 0, WIDTH, HEIGHT))
+            fonto = pg.font.Font(None, 80)
+            txt = fonto.render("Game Clear!!", True, (255, 0, 0))
+            image.set_alpha(40)
+            screen.blit(image,[0, 0])
+            screen.blit(txt, [WIDTH/2-150, HEIGHT/2])
+            pg.display.update()
+            time.sleep(2)
+            return
         tmr += 1
         clock.tick(50)
 
