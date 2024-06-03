@@ -60,7 +60,7 @@ class Enemy(pg.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = random.randint(0, WIDTH), random.randint(0, HEIGHT)  # 敵が出現するときの座標をランダムにする
         #敵が出現する時、攻撃対象のheroの方向を計算
-        self.vx, self.vy = calc_orientation(self.rect, hero.rct)  
+        self.vx, self.vy = calc_orientation(self.rect, hero.rect)  
         #self.vx, self.vy = random.randint(-7, 7), random.randint(-7, 7)  # 敵の横方向、縦方向のベクトル
         self.default_speed = 5  # 敵の速さの設定
         self.speed = self.default_speed
@@ -72,7 +72,7 @@ class Enemy(pg.sprite.Sprite):
         引数 screen：画面Surface
         """
         self.speed = self.default_speed+(level-1)
-        self.vx, self.vy = calc_orientation(self.rect, hero.rct)
+        self.vx, self.vy = calc_orientation(self.rect, hero.rect)
         yoko, tate = check_bound(self.rect)
         if not yoko:
             self.vx *= -1
@@ -124,11 +124,12 @@ class Hero:
         self.spd = __class__.spd
         self.dire = (+1, 0)
         self.img0 = self.imgs[self.dire]
-        self.rct: pg.Rect = self.img.get_rect()
-        self.rct.center = xy
+        self.rect: pg.Rect = self.img.get_rect()
+        self.rect.center = xy
         self.total_dist = [0, 0]
         self.sum_mv = [0, 0]
-
+        self.max_health = 200
+        self.health = self.max_health
 
     def update(self, key_lst: list[bool], spd: float, screen: pg.Surface):
         """
@@ -140,16 +141,22 @@ class Hero:
             if key_lst[k]:
                 self.sum_mv[0] += mv[0]*spd
                 self.sum_mv[1] += mv[1]*spd
-        # self.rct.move_ip(self.sum_mv)
+        # self.rect.move_ip(self.sum_mv)
         self.total_dist[0]+= self.sum_mv[0]
         self.total_dist[1]+= self.sum_mv[1]
 
-        if check_bound(self.rct) != (True, True):
-            self.rct.move_ip(-self.sum_mv[0], -self.sum_mv[1])
+        if check_bound(self.rect) != (True, True):
+            self.rect.move_ip(-self.sum_mv[0], -self.sum_mv[1])
         if any(self.sum_mv): # self.sum_mv両方0の時のみFalse
             self.dire = tuple([_/abs(_) if _ != 0 else 0 for _ in self.sum_mv])
             self.img = __class__.imgs[self.dire] # __class__.imgsのkeyの値に整形
-        screen.blit(self.img, self.rct)
+
+        fill = (self.health / self.max_health) * (self.rect.right-self.rect.left+100)
+        outline_rect = pg.Rect(self.rect.left-50, self.rect.centery-70, self.rect.right-self.rect.left+100, 25)
+        fill_rect = pg.Rect(self.rect.left-50, self.rect.centery-70, fill, 25)
+        pg.draw.rect(screen, (0, 255, 0), fill_rect)
+        pg.draw.rect(screen, (255, 255, 255), outline_rect, 2)
+        screen.blit(self.img, self.rect)
 
 
     def mvd(self, key_lst: list[bool], spd: float) -> tuple[int, int]:
@@ -193,8 +200,8 @@ class Weapon(pg.sprite.Sprite):
         self.vx = math.cos(math.radians(angle))
         self.vy = -math.sin(math.radians(angle))
         self.rect = self.image.get_rect()
-        self.rect.centery = hero.rct.centery + hero.rct.height * self.vy
-        self.rect.centerx = hero.rct.centerx + hero.rct.width * self.vx 
+        self.rect.centery = hero.rect.centery + hero.rect.height * self.vy
+        self.rect.centerx = hero.rect.centerx + hero.rect.width * self.vx 
         self.default_speed = 30
         self.speed = self.default_speed
         self.delete = True
@@ -221,8 +228,8 @@ class Weapon2(pg.sprite.Sprite):
         self.speed = self.default_speed+level
         self.angle += self.speed  # 角度を増加させる(回転速度)
         self.image = pg.transform.rotozoom(pg.image.load(f"fig/ken.png"), self.angle, 0.5)
-        self.rect.centerx = hero.rct[0] + math.cos(math.radians(self.angle)) * self.distance
-        self.rect.centery = hero.rct[1] + math.sin(math.radians(self.angle)) * self.distance
+        self.rect.centerx = hero.rect[0] + math.cos(math.radians(self.angle)) * self.distance
+        self.rect.centery = hero.rect[1] + math.sin(math.radians(self.angle)) * self.distance
         
 
 def main():
@@ -287,7 +294,10 @@ def main():
                 if wep.delete:
                     wep.kill()
             score.value+=100
-        total_dist = hero.total_dist# hero.mvd() # hero.mvdメソッドは、他のメンバーが作る予定（戻り値x, yのタプル）
+        for em in pg.sprite.spritecollide(hero, emys, True):
+            em.kill()
+            hero.health-=10
+        total_dist = hero.total_dist
         for i in range(90):
             for j in range(90):
                 screen.blit(bg_img, [-WIDTH + i*WIDTH/30 - (total_dist[0]%(WIDTH/30)), -HEIGHT + j*HEIGHT/30- (total_dist[1]%(HEIGHT/30))])
@@ -303,8 +313,6 @@ def main():
             else:
                 new_emy.speed = 5
             emys.add(new_emy)
-            # if cool_life>=0:
-            #     emys.sct
         cool_life-=1
         hero.update(key_lst, spd+(level-1), screen)
         emys.update(level, hero, screen)
@@ -317,6 +325,17 @@ def main():
             pg.draw.rect(image, (255, 255, 0), (0, 0, WIDTH, HEIGHT))
             fonto = pg.font.Font(None, 80)
             txt = fonto.render("Game Clear!!", True, (255, 0, 0))
+            image.set_alpha(40)
+            screen.blit(image,[0, 0])
+            screen.blit(txt, [WIDTH/2-150, HEIGHT/2])
+            pg.display.update()
+            time.sleep(2)
+            return
+        if hero.health<=0: # 体力がなくなったらゲームオーバー
+            image = pg.Surface((WIDTH,HEIGHT))
+            pg.draw.rect(image, (255, 0, 0), (0, 0, WIDTH, HEIGHT))
+            fonto = pg.font.Font(None, 80)
+            txt = fonto.render("Game Over.", True, (255, 0, 0))
             image.set_alpha(40)
             screen.blit(image,[0, 0])
             screen.blit(txt, [WIDTH/2-150, HEIGHT/2])
