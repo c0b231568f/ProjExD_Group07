@@ -356,7 +356,7 @@ def main():
         potions.draw(screen)
         score.update(screen)
         pg.display.update()
-        if score.value>=20000: # 2万点を超えたらクリア
+        if score.value>=10000: # 1万点を超えたらクリア
             image = pg.Surface((WIDTH,HEIGHT))
             pg.draw.rect(image, (255, 255, 0), (0, 0, WIDTH, HEIGHT))
             fonto = pg.font.Font(None, 80)
